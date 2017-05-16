@@ -40,16 +40,11 @@
           :config (load-theme 'solarized-light t))
         (tool-bar-mode -1)))
   (set-frame-font "Menlo 14")
+  (setq inhibit-startup-screen t)
   (setq-default indent-tabs-mode nil))
 
 (defun setup-javascript ()
   "JavaScript settings."
-  (use-package js2-mode
-    :ensure t
-    :mode ("\\.js$" . js2-mode))
-  (use-package company-tern
-    :ensure t
-    :config (add-to-list 'company-backends 'company-tern))
   (defun use-package-prettier-js ()
     (progn
       (add-to-list 'load-path "/usr/local/lib/node_modules/prettier/editors/emacs")
@@ -58,11 +53,24 @@
       (add-hook 'js2-mode-hook
                 (lambda ()
                   (add-hook 'before-save-hook 'prettier-before-save)))
-      (setq prettier-args '(
-                            "--trailing-comma" "es5"
+      (setq prettier-args '("--trailing-comma" "es5"
                             "--single-quote" "true"
-                            "--print-width" "100"
-                            ))))
+                            "--print-width" "100"))))
+  (use-package js2-mode
+    :ensure t
+    :config (progn
+              (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+              (add-to-list 'interpreter-mode-alist '("node" . js2-mode))
+              (add-hook 'js-mode-hook 'js2-minor-mode)))
+  (use-package tern
+    :ensure t
+    :config (progn
+              (add-hook 'js-mode-hook 'tern-mode)
+              (add-hook 'js2-mode-hook 'tern-mode)
+              (setq tern-command '("node" "/usr/local/bin/tern"))))
+  (use-package company-tern
+    :ensure t
+    :config (add-to-list 'company-backends 'company-tern))
   (use-package-prettier-js)
   (setq js-indent-level 2))
 
@@ -81,9 +89,21 @@
 
 (defun setup-shell ()
   "Shell settings."
+  (defun toolbear:term-handle-more-ansi-escapes (proc char)
+    "Handle additional ansi escapes."
+    (cond
+                                        ; Fix node backspace issue: 
+     ((eq char ?G)
+      (let ((col (min term-width (max 0 term-terminal-parameter))))
+        (term-move-columns (- col (term-current-column)))))
+     (t)))
+  (advice-add 'term-handle-ansi-escape :before #'toolbear:term-handle-more-ansi-escapes)
   (use-package exec-path-from-shell
-    :ensure t)
-  (setq ansi-term-program "/bin/bash"))
+    :ensure t
+    :config (exec-path-from-shell-initialize))
+  (use-package multi-term
+    :ensure t
+    :config (setq ansi-term-program "/bin/bash")))
 
 (defun setup-languages ()
   "Setup Programming Languages."
@@ -98,6 +118,20 @@
 
 (provide '.emacs)
 ;;; .emacs ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (solarized-theme use-package realgud magit js2-mode flycheck fiplr exec-path-from-shell company-tern company-auctex))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
 ;; Local Variables:
 ;; byte-compile-warnings: (not free-vars)
 ;; End:
