@@ -16,17 +16,19 @@
 
 (defun setup-programming ()
   "Programming environment settings."
+  (use-package projectile
+    :ensure t)
   (use-package magit ; Git
     :ensure t)
   (use-package realgud ; Debugger
     :ensure t)
-  (use-package fiplr ; Find in project
+  (use-package neotree
     :ensure t
-    :config (setq fiplr-ignored-globs '((directories (".git" ".svn"))
-                                        (files ("*.jpg" "*.png" "*.zip" "*~")))))
-  (use-package company ; Text completion
+    :config (global-set-key [f8] 'neotree-toggle))
+  (use-package auto-complete ; Text completion
     :ensure t
-    :init (global-company-mode))
+    :init (add-to-list 'ac-modes 'latex-mode)
+    :config (global-auto-complete-mode t))
   (use-package flycheck ; Syntax checking
     :ensure t
     :init (global-flycheck-mode)))
@@ -62,15 +64,18 @@
               (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
               (add-to-list 'interpreter-mode-alist '("node" . js2-mode))
               (add-hook 'js-mode-hook 'js2-minor-mode)))
+  (use-package ac-js2
+    :ensure t
+    :config (add-hook 'js2-mode-hook 'ac-js2-mode))
   (use-package tern
     :ensure t
     :config (progn
               (add-hook 'js-mode-hook 'tern-mode)
               (add-hook 'js2-mode-hook 'tern-mode)
               (setq tern-command '("node" "/usr/local/bin/tern"))))
-  (use-package company-tern
+  (use-package tern-auto-complete
     :ensure t
-    :config (add-to-list 'company-backends 'company-tern))
+    :config (tern-ac-setup))
   (use-package-prettier-js)
   (setq js-indent-level 2))
 
@@ -79,20 +84,23 @@
   (use-package tex
     :defer t
     :ensure auctex
-    :config
-    (setq TeX-PDF-mode t)
-    (setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin"))
-    (setq exec-path (append exec-path '("/Library/TeX/texbin"))))
-  (use-package company-auctex
+    :config (progn
+              (setq TeX-PDF-mode t)
+              (setenv "PATH" (concat (getenv "PATH") ":/Library/TeX/texbin"))
+              (setq exec-path (append exec-path '("/Library/TeX/texbin")))))
+  (use-package ac-math
     :ensure t
-    :config (add-to-list 'company-backends 'company-auctex)))
+    :config (setq ac-sources
+                  (append '(ac-source-math-unicode
+                            ac-source-math-latex
+                            ac-source-latex-commands
+                            ac-sources)))))            
 
 (defun setup-shell ()
   "Shell settings."
   (defun toolbear:term-handle-more-ansi-escapes (proc char)
     "Handle additional ansi escapes."
-    (cond
-                                        ; Fix node backspace issue: 
+    (cond ; Fix node backspace issue: 
      ((eq char ?G)
       (let ((col (min term-width (max 0 term-terminal-parameter))))
         (term-move-columns (- col (term-current-column)))))
@@ -113,8 +121,9 @@
   (setup-tex))
 
 (setup-general)
-(setup-programming)
 (setup-languages)
+(setup-programming)
+(ac-config-default)
 
 (provide '.emacs)
 ;;; .emacs ends here
