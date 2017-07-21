@@ -19,10 +19,14 @@
   (use-package projectile
     :ensure t)
   (use-package magit ; Git
-    :ensure t)
+    :ensure t
+    :config (global-set-key (kbd "C-x g") 'magit-status))
   (use-package realgud ; Debugger
     :ensure t)
-  (use-package neotree
+  (use-package powerline ;
+    :ensure t
+    :config (powerline-default-theme))
+  (use-package neotree ; Dired alternative
     :ensure t
     :config (global-set-key [f8] 'neotree-toggle))
   (use-package auto-complete ; Text completion
@@ -35,7 +39,7 @@
 
 (defun setup-general ()
   "Setup theme settings including fonts and colors."
-  (if window-system
+  (if (display-graphic-p)
       (progn
         (use-package solarized-theme
           :ensure t
@@ -76,7 +80,7 @@
   (use-package tern-auto-complete
     :ensure t
     :config (tern-ac-setup))
-  (use-package-prettier-js)
+  "(use-package-prettier-js)"
   (setq js-indent-level 2))
 
 (defun setup-tex ()
@@ -111,7 +115,10 @@
     :config (exec-path-from-shell-initialize))
   (use-package multi-term
     :ensure t
-    :config (setq ansi-term-program "/bin/bash")))
+    :config (setq ansi-term-program "/bin/bash"))
+  (add-hook 'term-mode-hook
+            (lambda ()
+              (define-key term-raw-map (kbd "C-y") 'term-paste))))
 
 (defun setup-languages ()
   "Setup Programming Languages."
@@ -134,7 +141,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (solarized-theme use-package realgud magit js2-mode flycheck fiplr exec-path-from-shell company-tern company-auctex))))
+    (ess solarized-theme use-package realgud magit js2-mode flycheck fiplr exec-path-from-shell company-tern company-auctex))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
